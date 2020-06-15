@@ -18,7 +18,6 @@ const useStyles = makeStyles((theme) => ({
 function OrderEntry(props) {
   const {order, side} = props;
   const {price, quantity, node_identifier} = order
-  console.log(node_identifier)
   return (
       <Grid container spacing={3}>
         <Grid item xs={4}>
