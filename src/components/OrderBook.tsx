@@ -1,5 +1,4 @@
-import React from 'react';
-import PropTypes, {func} from 'prop-types';
+import React, {FunctionComponent} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Grid from "@material-ui/core/Grid";
@@ -15,8 +14,26 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-function OrderEntry(props) {
-  const {order, side} = props;
+interface Order {
+    price: string,
+    quantity: string,
+    node_identifier: {
+        node_pub_key: string,
+        alias: string
+    }
+}
+
+interface Orders {
+    sell_orders: Order[]
+    buy_orders: Order[]
+}
+
+interface OrderEntryProps {
+    order: Order,
+    side: string,
+}
+
+const OrderEntry: FunctionComponent<OrderEntryProps> = ({order, side}) => {
   const {price, quantity, node_identifier} = order
   return (
       <Grid container spacing={3}>
@@ -35,8 +52,15 @@ function OrderEntry(props) {
   )
 }
 
-function Orderbook(props) {
-  const {value, index, orders, pair} = props;
+
+interface OrderBookProps {
+    index: number
+    value: number
+    orders: Orders
+    pair: string
+}
+
+const OrderBook: FunctionComponent<OrderBookProps> = ({value, index, orders, pair}) => {
   const classes = useStyles()
   const [base_symbol, quote_symbol] = pair.split("/")
   const {sell_orders: asks, buy_orders: bids} = orders
@@ -80,12 +104,4 @@ function Orderbook(props) {
   );
 }
 
-Orderbook.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
-  orders: PropTypes.any.isRequired,
-  pair: PropTypes.any.isRequired,
-};
-
-export default Orderbook;
+export default OrderBook;
