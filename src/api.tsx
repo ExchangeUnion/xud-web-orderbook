@@ -101,7 +101,7 @@ async function fetchPairs(): Promise<Array<string>> {
     return j
 }
 
-const socket = io("http://localhost:8080", {
+const socket = io({
     transports: ["websocket"],
 });
 
