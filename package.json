@@ -42,9 +42,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://127.0.0.1:8080",
   "devDependencies": {
     "@types/socket.io-client": "^1.4.33",
+    "http-proxy-middleware": "^1.0.4",
     "prop-types": "^15.7.2",
     "protoc-gen-grpc-web": "^1.1.0"
   }

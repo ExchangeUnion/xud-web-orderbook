@@ -2,6 +2,14 @@ import io from "socket.io-client";
 import {createContext} from "react";
 
 
+class BasicInfo {
+    version!: string;
+    network!: string;
+    nodePubKey!: string;
+    nodeAlias!: string;
+}
+
+
 class Owner {
     nodePubKey!: string;
     alias!: string;
@@ -61,14 +69,24 @@ class OrderBook {
 }
 
 
-function deserializeOwner(j: any) {
+function deserializeBasicInfo(j: any): BasicInfo {
+    const info = new BasicInfo();
+    info.version = j["version"];
+    info.network = j["network"];
+    info.nodePubKey = j["nodePubKey"];
+    info.nodeAlias = j["nodeAlias"];
+    return info;
+}
+
+
+function deserializeOwner(j: any): Owner {
     const owner = new Owner()
     owner.nodePubKey = j["nodePubKey"]
     owner.alias = j["alias"]
     return owner;
 }
 
-function deserializeOrder(j: any) {
+function deserializeOrder(j: any): Order {
     const order = new Order()
     order.id = j["id"]
     order.price = j["price"]
@@ -79,13 +97,19 @@ function deserializeOrder(j: any) {
     return order
 }
 
-function deserializeOrderBook(j: any) {
+function deserializeOrderBook(j: any): OrderBook {
     const result = new OrderBook()
     result.version = j["version"]
     result.asks = j["asks"].map(deserializeOrder)
     result.bids = j["bids"].map(deserializeOrder)
 
     return result
+}
+
+async function fetchInfo(): Promise<BasicInfo> {
+    const r = await fetch(`/api/info`);
+    const j = await r.json();
+    return deserializeBasicInfo(j);
 }
 
 async function fetchOrders(pair: string): Promise<OrderBook> {
@@ -101,14 +125,25 @@ async function fetchPairs(): Promise<Array<string>> {
     return j
 }
 
-const socket = io({
+const socket = io( {
+    path: "/api-ws",
     transports: ["websocket"],
 });
 
 const SocketContext = createContext(socket)
 
 export {
-    Order, OrderBook, fetchOrders, fetchPairs, SocketContext, deserializeOrderBook, deserializeOrder, deserializeOwner
+    // Models
+    BasicInfo, deserializeBasicInfo,
+    Owner, deserializeOwner,
+    Order, deserializeOrder,
+    OrderBook, deserializeOrderBook,
+    // APIs
+    fetchInfo,
+    fetchPairs,
+    fetchOrders,
+    // Context
+    SocketContext,
 }
 
 
