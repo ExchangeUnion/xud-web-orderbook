@@ -17,6 +17,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
+    "socket.io-client": "^2.3.0",
     "typescript": "~3.7.2"
   },
   "scripts": {
@@ -41,8 +42,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://192.168.11.2:8081",
+  "proxy": "http://127.0.0.1:8080",
   "devDependencies": {
+    "@types/socket.io-client": "^1.4.33",
     "prop-types": "^15.7.2",
     "protoc-gen-grpc-web": "^1.1.0"
   }
