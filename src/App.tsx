@@ -21,6 +21,8 @@ const useStyles = makeStyles((theme) => ({
         [theme.breakpoints.up('sm')]: {
             display: 'block',
         },
+    },
+    nav: {
         flexGrow: 1,
     },
     pairs: {
@@ -59,22 +61,24 @@ function SimpleTabs() {
             <AppBar position="static">
                 <Toolbar variant="dense">
                     <Typography className={classes.title} variant="h6" noWrap>
-                        Exchange Union
+                        OpenDEX centered
                     </Typography>
-                    <Tooltip title={"Change trading pair"} enterDelay={300}>
-                        <Button
-                            color="inherit"
-                            aria-owns="pairs-menu"
-                            aria-haspopup="true"
-                            aria-label="Change trading pair"
-                            onClick={handleClick}
-                        >
-                            <span className={classes.pairs}>
-                                {pairs[selectedPair] && pairs[selectedPair].replace("_", "/")}
-                            </span>
-                            <ExpandMoreIcon fontSize="small"/>
-                        </Button>
-                    </Tooltip>
+                    <div className={classes.nav}>
+                        <Tooltip title={"Change trading pair"} enterDelay={300}>
+                            <Button
+                                color="inherit"
+                                aria-owns="pairs-menu"
+                                aria-haspopup="true"
+                                aria-label="Change trading pair"
+                                onClick={handleClick}
+                            >
+                                <span className={classes.pairs}>
+                                    {pairs[selectedPair] && pairs[selectedPair].replace("_", "/")}
+                                </span>
+                                <ExpandMoreIcon fontSize="small"/>
+                            </Button>
+                        </Tooltip>
+                    </div>
                     <Menu
                         id="pairs-menu"
                         anchorEl={anchorEl}

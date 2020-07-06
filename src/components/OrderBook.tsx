@@ -3,15 +3,17 @@ import {makeStyles} from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
-import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
-import {SocketContext, fetchOrders, OrderBook as _OrderBook, Order, deserializeOrderBook} from "../api";
+import {deserializeOrderBook, fetchOrders, Order, OrderBook as _OrderBook, SocketContext} from "../api";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
         padding: theme.spacing(2),
-        textAlign: 'center',
+        textAlign: "center",
         color: theme.palette.text.secondary,
+    },
+    number: {
+       fontFamily: "monospace",
     }
 }))
 
@@ -22,15 +24,16 @@ interface OrderEntryProps {
 
 const OrderEntry: FunctionComponent<OrderEntryProps> = ({order, side}) => {
     const {price, amount, owner} = order
+    const classes = useStyles()
 
     if (side === "ask") {
         return (
             <Grid container spacing={3}>
                 <Grid item xs={6}>
-                    <span style={{color: "red"}}>{price}</span>
+                    <Box fontFamily="Monospace" style={{color: "red"}} fontSize={14}>{price}</Box>
                 </Grid>
                 <Grid item xs={6}>
-                    <span>{amount}</span>
+                    <Box fontFamily="Monospace" fontSize={14}>{amount}</Box>
                 </Grid>
             </Grid>
         )
@@ -38,10 +41,10 @@ const OrderEntry: FunctionComponent<OrderEntryProps> = ({order, side}) => {
         return (
             <Grid container spacing={3}>
                 <Grid item xs={6}>
-                    <span>{amount}</span>
+                    <Box fontFamily="Monospace" fontSize={14}>{amount}</Box>
                 </Grid>
                 <Grid item xs={6}>
-                    <span style={{color: "green"}}>{price}</span>
+                    <Box fontFamily="Monospace" style={{color: "green"}} fontSize={14}>{price}</Box>
                 </Grid>
             </Grid>
         )
@@ -71,7 +74,7 @@ const OrderBook: FunctionComponent<OrderBookProps> = ({pair}) => {
         const callback = (data: any) => {
             const j = JSON.parse(data)
             const book = deserializeOrderBook(j)
-            console.log("upate", book)
+            console.log("update", book)
             const result = orders.clone()
             result.version = book.version
             book.asks.forEach(order => result.update("asks", order))
@@ -102,9 +105,12 @@ const OrderBook: FunctionComponent<OrderBookProps> = ({pair}) => {
                                 <Grid item xs={6}>Quantity({base_symbol})</Grid>
                                 <Grid item xs={6}>Price({quote_symbol})</Grid>
                             </Grid>
-                            {bids.length > 0 ? bids.map((order, idx) => <OrderEntry order={order} key={idx}
-                                                                                    side="bid"/>) :
-                                <div style={{padding: 100, color: "lightgray"}}>No orders</div>}
+                            {
+                                bids.length > 0 ?
+                                    bids.map((order, idx) =>
+                                        <OrderEntry order={order} key={idx} side="bid"/>) :
+                                    <div style={{padding: 100, color: "lightgray"}}>No orders</div>
+                            }
                         </Paper>
                     </Grid>
                     <Grid item xs={6}>
@@ -114,9 +120,12 @@ const OrderBook: FunctionComponent<OrderBookProps> = ({pair}) => {
                                 <Grid item xs={6}>Price({quote_symbol})</Grid>
                                 <Grid item xs={6}>Quantity({base_symbol})</Grid>
                             </Grid>
-                            {asks.length > 0 ? asks.map((order, idx) => <OrderEntry order={order} key={idx}
-                                                                                    side="ask"/>) :
-                                <div style={{padding: 100, color: "lightgray"}}>No orders</div>}
+                            {
+                                asks.length > 0 ?
+                                    asks.map((order, idx) =>
+                                        <OrderEntry order={order} key={idx} side="ask"/>) :
+                                    <div style={{padding: 100, color: "lightgray"}}>No orders</div>
+                            }
                         </Paper>
                     </Grid>
                 </Grid>
