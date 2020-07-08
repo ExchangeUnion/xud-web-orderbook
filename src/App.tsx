@@ -21,6 +21,7 @@ const useStyles = makeStyles((theme) => ({
         [theme.breakpoints.up('sm')]: {
             display: 'block',
         },
+        marginRight: 24,
     },
     nav: {
         flexGrow: 1,
@@ -38,12 +39,17 @@ function SimpleTabs() {
 
     const classes = useStyles();
     const [pairs, setPairs] = useState<Array<string>>([]);
-    const [selectedPair, setSelectedPair] = useState<number>(0)
+    const [selectedPair, setSelectedPair] = useState<string | null>(localStorage.getItem("pair"))
     const [info, setInfo] = useState<BasicInfo | null>(null)
 
     useEffect(() => {
         fetchInfo().then(info => setInfo(info))
-        fetchPairs().then(pairs => setPairs(pairs))
+        fetchPairs().then(pairs => {
+            setPairs(pairs)
+            if (! selectedPair || ! pairs.includes(selectedPair)) {
+                setSelectedPair(pairs[0])
+            }
+        })
     }, [])
 
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -61,7 +67,7 @@ function SimpleTabs() {
             <AppBar position="static">
                 <Toolbar variant="dense">
                     <Typography className={classes.title} variant="h6" noWrap>
-                        OpenDEX centered
+                        OpenDEX
                     </Typography>
                     <div className={classes.nav}>
                         <Tooltip title={"Change trading pair"} enterDelay={300}>
@@ -73,7 +79,7 @@ function SimpleTabs() {
                                 onClick={handleClick}
                             >
                                 <span className={classes.pairs}>
-                                    {pairs[selectedPair] && pairs[selectedPair].replace("_", "/")}
+                                    {selectedPair && selectedPair.replace("_", "/")}
                                 </span>
                                 <ExpandMoreIcon fontSize="small"/>
                             </Button>
@@ -92,7 +98,9 @@ function SimpleTabs() {
                                 key={pair}
                                 // selected={userLanguage === language.code}
                                 onClick={() => {
-                                    setSelectedPair(idx)
+                                    const selectedPair = pairs[idx]
+                                    localStorage.setItem("pair", selectedPair)
+                                    setSelectedPair(selectedPair)
                                     handleClose()
                                 }}
                             >
@@ -100,11 +108,11 @@ function SimpleTabs() {
                             </MenuItem>
                         ))}
                     </Menu>
-                    {info && <span>{info.network} | {info.version}</span>}
+                    {info && <span><span style={{textTransform: "capitalize"}}>{info.network}</span> | <span>XUD {info.version}</span></span>}
                 </Toolbar>
             </AppBar>
             {
-                pairs[selectedPair] && <OrderBook pair={pairs[selectedPair]}/>
+                selectedPair && <OrderBook pair={selectedPair}/>
             }
         </div>
     );

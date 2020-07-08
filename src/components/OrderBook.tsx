@@ -5,6 +5,7 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import {deserializeOrderBook, fetchOrders, Order, OrderBook as _OrderBook, SocketContext} from "../api";
+import {Big} from "big.js";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -23,17 +24,31 @@ interface OrderEntryProps {
 }
 
 const OrderEntry: FunctionComponent<OrderEntryProps> = ({order, side}) => {
-    const {price, amount, owner} = order
-    const classes = useStyles()
+    const {price, amount} = order
+
+    let p = new Big(price);
+    let a = new Big(amount);
+    let pd = 6;
+    let ad = 2;
+    let pdc = p.c.length - 1 - p.e;
+    let adc = a.c.length - 1 - a.e;
+    let pz = pd - pdc;
+    let az = ad - adc;
 
     if (side === "ask") {
         return (
             <Grid container spacing={3}>
                 <Grid item xs={6}>
-                    <Box fontFamily="Monospace" style={{color: "red"}} fontSize={14}>{price}</Box>
+                    <Box fontFamily="Monospace" style={{color: "red"}} fontSize={14}>
+                        <span>{price}</span>
+                        {pz > 0 && <span style={{color: "#d2acac"}}>{'0'.repeat(pz)}</span>}
+                    </Box>
                 </Grid>
                 <Grid item xs={6}>
-                    <Box fontFamily="Monospace" fontSize={14}>{amount}</Box>
+                    <Box fontFamily="Monospace" fontSize={14}>
+                        <span>{amount}</span>
+                        {az > 0 && <span style={{color: "#dedede"}}>{'0'.repeat(az)}</span>}
+                    </Box>
                 </Grid>
             </Grid>
         )
@@ -41,10 +56,16 @@ const OrderEntry: FunctionComponent<OrderEntryProps> = ({order, side}) => {
         return (
             <Grid container spacing={3}>
                 <Grid item xs={6}>
-                    <Box fontFamily="Monospace" fontSize={14}>{amount}</Box>
+                    <Box fontFamily="Monospace" fontSize={14}>
+                        <span>{amount}</span>
+                        {az > 0 && <span style={{color: "#dedede"}}>{'0'.repeat(az)}</span>}
+                    </Box>
                 </Grid>
                 <Grid item xs={6}>
-                    <Box fontFamily="Monospace" style={{color: "green"}} fontSize={14}>{price}</Box>
+                    <Box fontFamily="Monospace" style={{color: "green"}} fontSize={14}>
+                        <span>{price}</span>
+                        {pz > 0 && <span style={{color: "#a9bfa9"}}>{'0'.repeat(pz)}</span>}
+                    </Box>
                 </Grid>
             </Grid>
         )
@@ -66,33 +87,45 @@ function parsePair(pair: string) {
 const OrderBook: FunctionComponent<OrderBookProps> = ({pair}) => {
     const classes = useStyles()
     const [base_symbol, quote_symbol] = parsePair(pair);
-    const [orders, setOrders] = useState<_OrderBook>(new _OrderBook())
+    const [book, setBook] = useState<_OrderBook>(new _OrderBook())
+    const [update, setUpdate] = useState<_OrderBook | null>(null)
 
     const socket = useContext(SocketContext)
 
     useEffect(() => {
+        if (update) {
+            console.log("update", update);
+            const newBook = book.clone()
+            console.log("state1", newBook, book);
+            newBook.version = update.version
+            update.asks.forEach(i => newBook.update("ask", i))
+            update.bids.forEach(i => newBook.update("bid", i))
+            console.log("state", newBook);
+            setUpdate(null);
+            setBook(newBook)
+        }
+    }, [update, book])
+
+    useEffect(() => {
         const callback = (data: any) => {
             const j = JSON.parse(data)
-            const book = deserializeOrderBook(j)
-            console.log("update", book)
-            const result = orders.clone()
-            result.version = book.version
-            book.asks.forEach(order => result.update("asks", order))
-            book.bids.forEach(order => result.update("bids", order))
-            console.log("state", result)
-            setOrders(result)
+            const update = deserializeOrderBook(j)
+            setUpdate(update)
         }
         const event = `orders/${pair}`
         socket.on(event, callback)
 
-        fetchOrders(pair).then(orders => setOrders(orders))
+        fetchOrders(pair).then(book => {
+            setBook(book);
+            console.log("state", book);
+        })
 
         return () => {
             socket.off(event, callback)
         }
-    }, [pair])
+    }, [socket, pair])
 
-    const {asks, bids} = orders;
+    const {asks, bids} = book;
 
     return (
         <div>

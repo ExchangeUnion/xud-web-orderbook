@@ -1,5 +1,6 @@
 import io from "socket.io-client";
 import {createContext} from "react";
+import {Big} from "big.js";
 
 
 class BasicInfo {
@@ -9,31 +10,14 @@ class BasicInfo {
     nodeAlias!: string;
 }
 
-
-class Owner {
-    nodePubKey!: string;
-    alias!: string;
-
-    public clone(): Owner {
-        const result = new Owner();
-        result.nodePubKey = this.nodePubKey;
-        result.alias = this.alias;
-        return result;
-    }
-}
-
 class Order {
-    id!: string;
     price!: string;
     amount!: string;
-    owner!: Owner;
 
     public clone(): Order {
         const result = new Order();
-        result.id = this.id;
         result.price = this.price;
         result.amount = this.amount;
-        result.owner = this.owner.clone();
         return result;
     }
 }
@@ -52,18 +36,26 @@ class OrderBook {
     }
 
     public update(side: string, order: Order) {
-        let orders = side === "asks"? this.asks : this.bids
-        const targets = orders.filter(i => i.id === order.id)
+        let orders = side === "ask"? this.asks : this.bids
+        const targets = orders.filter(i => i.price === order.price)
         if (targets.length === 1) {
             targets[0].amount = order.amount
         } else if (targets.length === 0) {
             orders.push(order)
-        }
-        orders = orders.filter(i => i.amount !== "0");
-        if (side === "asks") {
-            this.asks = [...orders]
         } else {
-            this.bids = [...orders]
+            throw new Error("Duplicated price")
+        }
+        console.log("a", side, order, orders)
+        orders = orders.filter(i => i.amount !== "0");
+        console.log("b", side, order, orders)
+        if (side === "ask") {
+            this.asks = [...orders].sort((a, b) => {
+                return new Big(a.price).cmp(new Big(b.price))
+            })
+        } else {
+            this.bids = [...orders].sort((a, b) => {
+                return new Big(b.price).cmp(new Big(a.price))
+            })
         }
     }
 }
@@ -78,22 +70,10 @@ function deserializeBasicInfo(j: any): BasicInfo {
     return info;
 }
 
-
-function deserializeOwner(j: any): Owner {
-    const owner = new Owner()
-    owner.nodePubKey = j["nodePubKey"]
-    owner.alias = j["alias"]
-    return owner;
-}
-
 function deserializeOrder(j: any): Order {
     const order = new Order()
-    order.id = j["id"]
     order.price = j["price"]
     order.amount = j["amount"]
-    if (j["owner"]) {
-        order.owner = deserializeOwner(j["owner"])
-    }
     return order
 }
 
@@ -135,7 +115,6 @@ const SocketContext = createContext(socket)
 export {
     // Models
     BasicInfo, deserializeBasicInfo,
-    Owner, deserializeOwner,
     Order, deserializeOrder,
     OrderBook, deserializeOrderBook,
     // APIs
